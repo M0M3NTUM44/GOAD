@@ -76,9 +76,31 @@ resource "azurerm_network_interface" "goad-vm-nic" {
   }
 }
 
-resource "azurerm_windows_virtual_machine" "goad-vm" {
+resource "azurerm_public_ip" "vm_public_ip" {
+  for_each            = var.vm_config
+  name                = "public-ip-${each.value.name}"
+  location            = azurerm_resource_group.resource_group.location
+  resource_group_name = azurerm_resource_group.resource_group.name
+  allocation_method   = "Static"
+}
+
+resource "azurerm_network_interface" "vm_public_nic" {
   for_each = var.vm_config
 
+  name                = "vm-${each.value.name}-public-nic"
+  location            = azurerm_resource_group.resource_group.location
+  resource_group_name = azurerm_resource_group.resource_group.name
+
+  ip_configuration {
+    name                          = "ipconfig-${each.value.name}"
+    subnet_id                     = azurerm_subnet.subnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.vm_public_ip[each.key].id
+  }
+}
+
+resource "azurerm_windows_virtual_machine" "goad-vm" {
+  for_each = var.vm_config
   name                = "goad-vm-${each.value.name}"
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
@@ -87,6 +109,7 @@ resource "azurerm_windows_virtual_machine" "goad-vm" {
   admin_password      = "${each.value.password}"
   network_interface_ids = [
     azurerm_network_interface.goad-vm-nic[each.key].id,
+    azurerm_network_interface.vm_public_nic[each.key].id,
   ]
 
   os_disk {
