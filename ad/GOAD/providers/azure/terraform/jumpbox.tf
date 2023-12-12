@@ -8,6 +8,10 @@ resource "azurerm_public_ip" "ubuntu_public_ip" {
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
   allocation_method   = "Static"
+ tags = {
+    Owner   = "Lahav.M"
+    Project = "ES_AD_Training_Lab"
+  }
 }
 
 resource "azurerm_network_interface" "ubuntu_jumbox_nic" {
@@ -22,6 +26,11 @@ resource "azurerm_network_interface" "ubuntu_jumbox_nic" {
     private_ip_address            = "192.168.56.100"
     public_ip_address_id          = azurerm_public_ip.ubuntu_public_ip.id
   }
+ tags = {
+    Owner   = "Lahav.M"
+    Project = "ES_AD_Training_Lab"
+  }
+
 }
 
 resource "azurerm_linux_virtual_machine" "jumpbox" {
@@ -39,6 +48,11 @@ resource "azurerm_linux_virtual_machine" "jumpbox" {
   admin_ssh_key {
     username   = var.jumpbox_username
     public_key = tls_private_key.ssh.public_key_openssh
+  }
+
+  tags = {
+    Owner   = "Lahav.M"
+    Project = "ES_AD_Training_Lab"
   }
 
   os_disk {
