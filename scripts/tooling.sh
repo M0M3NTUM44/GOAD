@@ -98,7 +98,43 @@ else
 fi
 
 # Install krb5-user and related packages
-sudo apt-get install -y krb5-user libpam-krb5 libpam-ccreds auth-client-config
+sudo apt-get install -y krb5-user libpam-krb5 libpam-ccreds
+
+# Define the Kerberos realm and server
+realm="ESSOS.LOCAL"
+server="meereen.essos.local"
+
+# Update /etc/krb5.conf
+sudo tee /etc/krb5.conf > /dev/null <<EOF
+[libdefaults]
+	default_realm = essos.local
+	kdc_timesync = 1
+  	ccache_type = 4
+  	forwardable = true
+  	proxiable = true
+  	fcc-mit-ticketflags = true
+
+[realms]
+  north.sevenkingdoms.local = {
+      kdc = winterfell.north.sevenkingdoms.local
+      admin_server = winterfell.north.sevenkingdoms.local
+  }
+  sevenkingdoms.local = {
+      kdc = kingslanding.sevenkingdoms.local
+      admin_server = kingslanding.sevenkingdoms.local
+  }
+  essos.local = {
+      kdc = meereen.essos.local
+      admin_server = meereen.essos.local
+  }
+
+[domain_realm]
+    .$realm = $realm
+    $realm = $realm
+EOF
+
+echo -e "${GREEN}[+] Kerberos configuration updated with realm $realm and server $server.${NC}"
+
 
 # Check if krb5 is installed successfully
 if command -v kinit &> /dev/null; then
@@ -112,19 +148,8 @@ command_exists() {
     command -v "$@" >/dev/null 2>&1
 }
 
-# Install pipx if it is not already installed
-if ! command_exists pipx; then
-    echo -e "${YELLOW}[!] pipx not found, installing pipx...${NC}"
-    sudo apt-get update
-    sudo apt-get install -y python3-pip
-    python3 -m pip install --user pipx
-    python3 -m pipx ensurepath
-else
-    echo -e "${GREEN}[+] pipx is already installed.${NC}"
-fi
-
 if ! command_exists crackmapexec; then
-    pipx install crackmapexec
+    sudo snap install crackmapexec
     if command_exists crackmapexec; then
         echo -e "${GREEN}[+] crackmapexec was successfully installed.${NC}"
     else
@@ -133,6 +158,19 @@ if ! command_exists crackmapexec; then
 else
     echo -e "${YELLOW}[!] crackmapexec is already installed.${NC}"
 fi
+# Adding cme as alias to crackmapexec
+config_file="${HOME}/.bashrc"
+if grep -q "alias cme='crackmapexec'" "$config_file"; then
+    echo -e "${GREEN}[+] Alias for crackmapexec already exists in $config_file${NC}"
+else
+    # Append the alias to the configuration file
+    echo "$alias_command" >> "$config_file"
+    echo -e "${GREEN}[+] Added alias for crackmapexec to $config_file${NC}"
+fi
+
+# Inform the user to restart the terminal or source the configuration file
+echo -e "${YELLOW}[!] Please restart your terminal or run 'source $config_file' to use the alias.${NC}"
+
 # Install ldap-utils
 sudo apt-get install -y ldap-utils
 
@@ -146,7 +184,6 @@ fi
 # Install pipx if it is not already installed
 if ! command_exists pipx; then
     echo -e "${YELLOW}[!] pipx not found, installing pipx...${NC}"
-    sudo apt-get update
     sudo apt-get install -y python3-pip
     python3 -m pip install --user pipx
     python3 -m pipx ensurepath
@@ -177,8 +214,8 @@ fi
 
 # Install enum4linux using Snap
 if ! command_exists enum4linux; then
-    sudo snap install enum4linux-ng
-    if command_exists enum4linux-ng; then
+    sudo snap install enum4linux
+    if command_exists enum4linux; then
         echo -e "${GREEN}[+] enum4linux was successfully installed.${NC}"
     else
         echo -e "${RED}[-] An error occurred during the installation of enum4linux.${NC}"
@@ -235,6 +272,18 @@ if command_exists bloodhound; then
     echo -e "${GREEN}[+] bloodhound.py was successfully installed.${NC}"
 fi
 
+# Define bloodhound.py as alias for bloodhound-python
+alias_command="alias bloodhound.py='bloodhound-python'"
+config_file="${HOME}/.bashrc"
+if grep -q "alias bloodhound.py='bloodhound-python'" "$config_file"; then
+    echo -e "${GREEN}[+] Alias for bloodhound-python already exists in $config_file${NC}"
+else
+    # Append the alias to the configuration file
+    echo "$alias_command" >> "$config_file"
+    echo -e "${GREEN}[+] Added alias for bloodhound-python to $config_file${NC}"
+    echo -e "${YELLOW}[!] Please restart your terminal or run 'source $config_file' to use the alias.${NC}"
+fi
+
 # Install Java (required by Neo4j)
 sudo apt-get install -y default-jdk
 
@@ -273,3 +322,15 @@ if [ ! -d "$responder_dir" ]; then
 else
     echo e "${GREEN}[+] Responder directory already exists.${NC}"
 fi
+
+# Adding /opt/Responder to PATH
+config_file="${HOME}/.bashrc"
+if ! grep -q "$responder_dir" "$config_file"; then
+    echo "export PATH=\"\$PATH:$responder_dir\"" >> "$config_file"
+    echo -e "${GREEN}[+] Responder directory added to PATH in $config_file${NC}"
+else
+    echo -e "${GREEN}[+] Responder directory already in PATH${NC}"
+fi
+
+# Inform the user to source the updated configuration file or restart the terminal
+echo -e "${YELLOW}[!] Please restart your terminal or run 'source $config_file' to apply the changes.${NC}"
