@@ -159,6 +159,7 @@ else
     echo -e "${YELLOW}[!] crackmapexec is already installed.${NC}"
 fi
 # Adding cme as alias to crackmapexec
+alias_command="alias cme='crackmapexec'"
 config_file="${HOME}/.bashrc"
 if grep -q "alias cme='crackmapexec'" "$config_file"; then
     echo -e "${GREEN}[+] Alias for crackmapexec already exists in $config_file${NC}"
