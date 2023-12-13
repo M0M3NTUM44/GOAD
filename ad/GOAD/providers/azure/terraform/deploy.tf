@@ -116,10 +116,6 @@ resource "azurerm_subnet" "bastion_subnet" {
   resource_group_name  = azurerm_resource_group.resource_group.name
   virtual_network_name = "goad-virtual-network"
   address_prefixes     = ["192.168.0.0/27"]
- tags = {
-    Owner   = "Lahav.M"
-    Project = "ES_AD_Training_Lab"
-  }
 }
 
 resource "azurerm_public_ip" "bastion_public_ip" {
@@ -143,10 +139,6 @@ resource "azurerm_bastion_host" "bastion_host" {
     name                 = "configuration"
     subnet_id            = azurerm_subnet.bastion_subnet.id
     public_ip_address_id = azurerm_public_ip.bastion_public_ip.id
-  }
- tags = {
-    Owner   = "Lahav.M"
-    Project = "ES_AD_Training_Lab"
   }
 }
 
