@@ -321,7 +321,7 @@ if [ ! -d "$responder_dir" ]; then
     sudo git clone https://github.com/lgandx/Responder.git "$responder_dir"
     echo -e "${GREEN}[+] Responder has been successfully cloned.${NC}"
 else
-    echo e "${GREEN}[+] Responder directory already exists.${NC}"
+    echo -e "${GREEN}[+] Responder directory already exists.${NC}"
 fi
 
 # Adding /opt/Responder to PATH
