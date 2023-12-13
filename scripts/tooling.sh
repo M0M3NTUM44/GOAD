@@ -255,3 +255,21 @@ unzip BloodHound-linux-x64.zip -d BloodHound
 rm BloodHound-linux-x64.zip
 
 echo -e "${GREEN}[+] BloodHound installation complete. Start Neo4j and open BloodHound.${NC}"
+
+# Install Responder.py
+responder_dir="/opt/Responder"
+
+# Check if git is installed, if not, install it
+if ! command -v git &> /dev/null; then
+    echo -e "${YELLOW}[!] Git is not installed. Installing Git...${NC}"
+    sudo apt-get install -y git
+fi
+
+# Clone Responder
+if [ ! -d "$responder_dir" ]; then
+    echo -e "${YELLOW}[!] Cloning Responder into $responder_dir...${NC}"
+    sudo git clone https://github.com/lgandx/Responder.git "$responder_dir"
+    echo -e "${GREEN}[+] Responder has been successfully cloned.${NC}"
+else
+    echo e "${GREEN}[+] Responder directory already exists.${NC}"
+fi
