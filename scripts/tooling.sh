@@ -335,3 +335,30 @@ fi
 
 # Inform the user to source the updated configuration file or restart the terminal
 echo -e "${YELLOW}[!] Please restart your terminal or run 'source $config_file' to apply the changes.${NC}"
+
+# Define the entries to add to /etc/hosts
+entries_to_add=(# GOAD
+	"192.168.56.10   sevenkingdoms.local kingslanding.sevenkingdoms.local kingslanding"
+	"192.168.56.11   winterfell.north.sevenkingdoms.local north.sevenkingdoms.local winterfell"
+	"192.168.56.12   essos.local meereen.essos.local meereen"
+	"192.168.56.22   castelblack.north.sevenkingdoms.local castelblack"
+	"192.168.56.23   braavos.essos.local braavos"
+)
+
+# Function to check if an entry exists in /etc/hosts
+entry_exists() {
+    local entry="$1"
+    grep -qF -- "$entry" /etc/hosts
+}
+
+# Add each entry to /etc/hosts if it doesn't already exist
+for entry in "${entries_to_add[@]}"; do
+    if ! entry_exists "$entry"; then
+        echo -e "${YELLOW}[!] Adding $entry to /etc/hosts${NC}"
+        echo "$entry" | sudo tee -a /etc/hosts > /dev/null
+    else
+        echo -e "${GREEN}[+] Entry $entry already exists in /etc/hosts${NC}"
+    fi
+done
+
+echo -e "${GREEN}[+] Update to /etc/hosts complete.${NC}"
