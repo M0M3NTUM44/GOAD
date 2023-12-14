@@ -337,7 +337,7 @@ fi
 echo -e "${YELLOW}[!] Please restart your terminal or run 'source $config_file' to apply the changes.${NC}"
 
 # Define the entries to add to /etc/hosts
-entries_to_add=(# GOAD
+entries_to_add=("# GOAD"
 	"192.168.56.10   sevenkingdoms.local kingslanding.sevenkingdoms.local kingslanding"
 	"192.168.56.11   winterfell.north.sevenkingdoms.local north.sevenkingdoms.local winterfell"
 	"192.168.56.12   essos.local meereen.essos.local meereen"
