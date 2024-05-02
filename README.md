@@ -26,6 +26,11 @@ This lab use free windows VM only (180 days). After that delay enter a license o
 <img alt="GOAD Light" width="600" src="./docs/img/GOAD-Light_schema.png">
 </div>
 
+- [SCCM](./ad/SCCM/README.md) : 4 vms, 1 forest, 1 domain, with microsoft configuration manager installed
+<div align="center">
+<img alt="SCCM" width="600" src="./docs/img/SCCMLAB_overview.png">
+</div>
+
 - [NHA](./ad/NHA/README.md) : A challenge with 5 vms and 2 domains. no schema provided, you will have to find out how break it.
 
 ## Requirements
@@ -97,6 +102,12 @@ This lab use free windows VM only (180 days). After that delay enter a license o
 
 - The goad install will run all the ansible playbook one by one with a failover to restart the ansible playbook if something goes wrong (sometimes vms or playbook hit timeout so this will restart the playbook automatically)
 
+### goad.sh options
+
+- `-a` : ansible only is played during install task (no vagrant or terraform). This is useful if you install and run vagrant on windows and then launch the provisioning from a different computer (example : a kali linux connected to goad network)
+- `-r <ansible_file.yml>` : run only one ansible task (useful to run elk.yml or run only one playbook)
+- `-e` : enable elk in vagrant (example to install elk and play the elk playbook once you finish goad install run : `./goad.sh -t install -l GOAD -p virtualbox -m local -e -r elk.yml`)
+
 ## Provisioning
 
 - The provisioning is always done with ansible, more detail on the ansible provisioning here : [Ansible provisioning](./docs/provisioning.md)
@@ -133,7 +144,7 @@ This lab use free windows VM only (180 days). After that delay enter a license o
 - [X] Anonymous RPC user listing
 - [X] Child parent domain
 - [X] Generate certificate and enable ldaps
-- [X] ADCS - ESC 1/2/3/8
+- [X] ADCS - ESC 1/2/3/4/6/8
 - [X] Certifry
 - [X] Samaccountname/nopac
 - [X] Petitpotam unauthent
@@ -149,12 +160,20 @@ This lab use free windows VM only (180 days). After that delay enter a license o
 - [X] Add Gmsa (receipe created)
 - [X] Add azure support
 - [X] Refactoring lab and providers
-- [ ] Add PPL
-- [ ] Add Credential Guard
+- [X] Protected Users
+- [X] Account is sensitive
+- [X] Add PPL
+- [X] Add Gmsa
+- [X] Groups inside groups
+- [X] Shares with secrets (all, sysvol)
+- [ ] ADCS add vulns
 - [ ] Add Applocker
-- [ ] Zone transfert
-- [ ] Wsus
-- [ ] Sccm
+- [ ] Add optional EDR install on goad
+- [ ] Add attackbox + guacamole and openvpn creation
+
+## Road Map for other labs (because these are too heavy for being embedded in goad)
+- [X] Wsus (see SCCM lab)
+- [X] Sccm (see SCCM lab)
 - [ ] Exchange
 
 ## Lab organization

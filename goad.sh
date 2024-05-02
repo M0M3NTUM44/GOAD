@@ -12,8 +12,12 @@ JOB=
 PROVIDERS="virtualbox vmware azure proxmox"
 LABS=$(ls -A ad/ |grep -v 'TEMPLATE')
 TASKS="check install start stop status restart destroy disablevagrant enablevagrant"
+ANSIBLE_PLAYBOOKS="edr.yml build.yml ad-servers.yml ad-parent_domain.yml ad-child_domain.yml ad-members.yml ad-trusts.yml ad-data.yml ad-gmsa.yml laps.yml ad-relations.yml adcs.yml ad-acl.yml servers.yml security.yml vulnerabilities.yml reboot.yml elk.yml sccm-install.yml sccm-config.yml"
 METHODS="local docker"
-
+ANSIBLE_ONLY=0
+ANSIBLE_PLAYBOOK=
+GOAD_VAGRANT_OPTIONS=
+GOAD_EXTENSIONS="elk"
 
 print_usage() {
   echo "${ERROR} Usage: ./goad.sh -t task -l lab -p provider -m method"
@@ -36,6 +40,14 @@ print_usage() {
   echo "${INFO} -m : method must be one of the following (optional, default : local):"
   echo "   - local : to use local ansible install (default)";
   echo "   - docker : to use docker ansible install";
+  echo "${INFO} -a : to run only ansible on install (optional)";
+  echo "${INFO} -r : to run only one ansible playbook (optional)";
+  echo "   - example : vulnerabilities.yml";
+  echo "${INFO} -e : to activate extension (separated by coma) (optional)";
+  for extension in $GOAD_EXTENSIONS;  do
+    echo "   - $extension";
+  done
+  echo "${INFO} -h : show this help";
   echo
   echo "${OK} example: ./goad.sh -t check -l GOAD -p virtualbox -m local";
   exit 0
@@ -47,13 +59,17 @@ function exists_in_list() {
     echo $LIST | tr " " '\n' | grep -F -q -x "$VALUE"
 }
 
-while getopts t:l:p:m: flag
+while getopts t:l:p:m:ar:e:h flag
   do
       case "${flag}" in
           t) TASK=${OPTARG};;
           l) LAB=${OPTARG};;
           p) PROVIDER=${OPTARG};;
           m) METHOD=${OPTARG};;
+          a) ANSIBLE_ONLY=1;;
+          r) ANSIBLE_PLAYBOOK=${OPTARG};;
+          e) GOAD_VAGRANT_OPTIONS="$GOAD_VAGRANT_OPTIONS,${OPTARG}";;
+          h) print_usage; exit;
       esac
   done
 
@@ -78,6 +94,17 @@ while getopts t:l:p:m: flag
     print_usage
   fi
 
+  # loop on every extension
+  for GOAD_EXT in $(echo $GOAD_VAGRANT_OPTIONS | sed "s/,/ /g")
+  do
+      if exists_in_list "$GOAD_EXTENSIONS" "$GOAD_EXT"; then
+        echo "${OK} Extension: $GOAD_EXT"
+      else
+        echo "${ERROR} Extension: $GOAD_EXT not allowed"
+        print_usage
+      fi
+  done
+
   if [ -z $METHOD ]; then
      METHOD="local"
   else
@@ -88,6 +115,19 @@ while getopts t:l:p:m: flag
       print_usage
     fi
   fi
+  if [[ ! -z $ANSIBLE_PLAYBOOK ]]; then
+     if exists_in_list "$ANSIBLE_PLAYBOOKS" "$ANSIBLE_PLAYBOOK"; then
+      echo "${OK} Ansible playbook: $ANSIBLE_PLAYBOOK"
+    else
+      echo "${ERROR} Ansible playbook: $ANSIBLE_PLAYBOOK not allowed"
+      print_usage
+    fi
+  fi
+
+  if [[ "$ANSIBLE_ONLY" -eq 1 ]]; then
+    echo "${OK} Run ansible only"
+  fi
+
 # check if the lab provider folder exist
 if [[ -d "ad/$LAB/providers/$PROVIDER" ]]; then
    echo "${OK} folder ad/$LAB/providers/$PROVIDER found"
@@ -121,7 +161,7 @@ install_providing(){
     "virtualbox"|"vmware")
         cd "ad/$lab/providers/$provider"
         echo "${OK} launch vagrant"
-        vagrant up
+        GOAD_VAGRANT_OPTIONS=$GOAD_VAGRANT_OPTIONS vagrant up
         result=$?
         if [ ! $result -eq 0 ]; then
           cd -
@@ -206,10 +246,16 @@ install_provisioning(){
     "virtualbox"|"vmware"|"proxmox")
         case $method in
           "local")
-              cd ansible
-              export ANSIBLE_COMMAND="ansible-playbook -i ../ad/$lab/data/inventory -i ../ad/$lab/providers/$provider/inventory"
-              ../scripts/provisionning.sh
-              cd -
+              if [ -z $ANSIBLE_PLAYBOOK ]; then
+                cd ansible
+                export LAB=$lab PROVIDER=$provider
+                ../scripts/provisionning.sh
+                cd -
+              else
+                cd ansible
+                ansible-playbook -i ../ad/$lab/data/inventory -i ../ad/$lab/providers/$provider/inventory $ANSIBLE_PLAYBOOK
+                cd -
+              fi
             ;;
           "docker")
               use_sudo=""
@@ -227,23 +273,40 @@ install_provisioning(){
                 $use_sudo docker build -t goadansible .
                 echo "${OK} Container goadansible creation complete"
               fi
+              if [ -z $ANSIBLE_PLAYBOOK ]; then
+                echo "${OK} Start provisioning from docker"
+                $use_sudo docker run -ti --rm --network host -h goadansible -v $(pwd):/goad -w /goad/ansible goadansible /bin/bash -c "LAB=$lab PROVIDER=$provider ../scripts/provisionning.sh"
+              else
               echo "${OK} Start provisioning from docker"
-              $use_sudo docker run -ti --rm --network host -h goadansible -v $(pwd):/goad -w /goad/ansible goadansible /bin/bash -c "ANSIBLE_COMMAND='ansible-playbook -i ../ad/$lab/data/inventory -i ../ad/$lab/providers/$provider/inventory' ../scripts/provisionning.sh"
+                $use_sudo docker run -ti --rm --network host -h goadansible -v $(pwd):/goad -w /goad/ansible goadansible /bin/bash -c "ansible-playbook -i ../ad/$lab/data/inventory -i ../ad/$lab/providers/$provider/inventory $ANSIBLE_PLAYBOOK"
+              fi
             ;;
         esac
       ;;
     "azure")
+
           cd "ad/$lab/providers/$provider/terraform"
           public_ip=$(terraform output -raw ubuntu-jumpbox-ip)
           cd -
+          
+          rsync -a --exclude-from='.gitignore' -e "ssh -o 'StrictHostKeyChecking no' -i $CURRENT_DIR/ad/$lab/providers/$provider/ssh_keys/ubuntu-jumpbox.pem" "$CURRENT_DIR/" goad@$public_ip:~/GOAD/
+
            case $method in
             "local")
+              if [ -z $ANSIBLE_PLAYBOOK ]; then
                 ssh -tt -o "StrictHostKeyChecking no" -i "$CURRENT_DIR/ad/$lab/providers/$provider/ssh_keys/ubuntu-jumpbox.pem" goad@$public_ip << EOF
                   cd /home/goad/GOAD/ansible
-                  export ANSIBLE_COMMAND="ansible-playbook -i ../ad/$lab/data/inventory -i ../ad/$lab/providers/$provider/inventory"
+                  export LAB=$lab PROVIDER=$provider
                   ../scripts/provisionning.sh
                   exit
 EOF
+              else
+              ssh -tt -o "StrictHostKeyChecking no" -i "$CURRENT_DIR/ad/$lab/providers/$provider/ssh_keys/ubuntu-jumpbox.pem" goad@$public_ip << EOF
+                  cd /home/goad/GOAD/ansible
+                  ansible-playbook -i ../ad/$lab/data/inventory -i ../ad/$lab/providers/$provider/inventory $ANSIBLE_PLAYBOOK
+                  exit
+EOF
+              fi
                 print_azure_info
               ;;
             *)
@@ -340,7 +403,9 @@ enablevagrant(){
 install(){
   echo "${OK} Launch installation for: $LAB / $PROVIDER / $METHOD"
   cd $CURRENT_DIR
-  install_providing $LAB $PROVIDER
+  if [[ "$ANSIBLE_ONLY" -eq 0 ]]; then
+    install_providing $LAB $PROVIDER
+  fi
   cd $CURRENT_DIR
   install_provisioning $LAB $PROVIDER $METHOD
 }
@@ -362,7 +427,7 @@ start(){
     "virtualbox"|"vmware")
           cd "ad/$LAB/providers/$PROVIDER"
           echo "${OK} start vms"
-          vagrant up
+          GOAD_VAGRANT_OPTIONS=$GOAD_VAGRANT_OPTIONS vagrant up
           cd -
       ;;
     "proxmox")
@@ -397,7 +462,7 @@ stop(){
     "virtualbox"|"vmware")
           cd "ad/$LAB/providers/$PROVIDER"
           echo "${OK} stop vms"
-          vagrant halt
+          GOAD_VAGRANT_OPTIONS=$GOAD_VAGRANT_OPTIONS vagrant halt
           cd -
       ;;
     "proxmox")
@@ -472,7 +537,7 @@ destroy(){
           read -r -p "Are you sure? [y/N] " response
           case "$response" in
               [yY][eE][sS]|[yY]) 
-                  vagrant destroy --force
+                  GOAD_VAGRANT_OPTIONS=$GOAD_VAGRANT_OPTIONS vagrant destroy --force
                   ;;
               *)
                   echo "abort"
@@ -497,7 +562,7 @@ status(){
   case $PROVIDER in
     "virtualbox"|"vmware")
           cd "ad/$LAB/providers/$PROVIDER"
-          vagrant status
+          GOAD_VAGRANT_OPTIONS=$GOAD_VAGRANT_OPTIONS vagrant status
           cd -
       ;;
     "proxmox")

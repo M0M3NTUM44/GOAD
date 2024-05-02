@@ -32,15 +32,18 @@ You can change the vm version in the Vagrantfile according to Stefan Scherer vag
 
 - You can find a lot of the available scenarios on [https://mayfly277.github.io/categories/ad/](https://mayfly277.github.io/categories/ad/)
 
+- Graph of some scenarios is available here :
+![diagram-GOAD_compromission_Path_dark](./../../docs/img/diagram-GOAD_compromission_Path_dark.png)
+
 NORTH.SEVENKINGDOMS.LOCAL
 - STARKS:              RDP on WINTERFELL AND CASTELBLACK
-  - arya.stark:        Execute as user on mssql
+  - arya.stark:        Execute as user on mssql, pass on all share
   - eddard.stark:      DOMAIN ADMIN NORTH/ (bot 5min) LLMRN request to do NTLM relay with responder
   - catelyn.stark:     
-  - robb.stark:        bot (3min) RESPONDER LLMR
-  - sansa.stark:       keywalking password
+  - robb.stark:        bot (3min) RESPONDER LLMR / lsass present user
+  - sansa.stark:       keywalking password / unconstrained delegation
   - brandon.stark:     ASREP_ROASTING
-  - rickon.stark:      
+  - rickon.stark:      pass spray WinterYYYY
   - jon.snow:          mssql admin / KERBEROASTING / mssql trusted link
   - hodor:             PASSWORD SPRAY (user=password)
 - NIGHT WATCH:         RDP on CASTELBLACK
@@ -49,19 +52,19 @@ NORTH.SEVENKINGDOMS.LOCAL
   - jon.snow:          (see starks)
   - jeor.mormont:      (see mormont)
 - MORMONT:             RDP on CASTELBLACK
-  - jeor.mormont:      Admin castelblack
+  - jeor.mormont:      Admin castelblack, pass in sysvol script
 - AcrossTheSea :       cross forest group
 
 SEVENKINGDOMS.LOCAL
 - LANISTERS
-  - tywin.lannister:   ACE forcechangepassword on jaime.lanister
+  - tywin.lannister:   ACE forcechangepassword on jaime.lanister, password on sysvol cyphered
   - jaime.lannister:   ACE genericwrite-on-user joffrey.baratheon
   - tyron.lannister:   ACE self membership on small council
   - cersei.lannister:  DOMAIN ADMIN SEVENKINGDOMS
 - BARATHEON:           RDP on KINGSLANDING
-  - robert.baratheon:  DOMAIN ADMIN SEVENKINGDOMS
+  - robert.baratheon:  DOMAIN ADMIN SEVENKINGDOMS, protected user
   - joffrey.baratheon: ACE Write DACL on tyron.lannister
-  - renly.baratheon:
+  - renly.baratheon:   WriteDACL on container, sensitive user
   - stannis.baratheon: ACE genericall-on-computer kingslanding 
 - SMALL COUNCIL :      ACE add Member to group dragon stone / RDP on KINGSLANDING
   - petyer.baelish:    
@@ -73,6 +76,7 @@ SEVENKINGDOMS.LOCAL
 
 ESSOS.LOCAL
 - TARGERYEN
+  - missande :          ASREP roasting, generic all on khal
   - daenerys.targaryen: DOMAIN ADMIN ESSOS
   - viserys.targaryen:  ACE write property on jorah.mormont
   - jorah.mormont:      mssql execute as login / mssql trusted link / Read LAPS Password
@@ -125,37 +129,8 @@ ESSOS.LOCAL
 - **elk** a kibana is configured on http://192.168.56.50:5601 to follow the lab events
 - infos : log encyclopedia : https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/
 - the elk is not installed by default due to resources reasons. 
-- to install and start the elk play the following commands :
 
-  1. uncomment the elk vm in Vagrantfile (vmware or virtualbox only by now) and provision with `vagrant up elk` (do not forget to add a coma on the box before)
-```
-# { :name => "elk", :ip => "192.168.56.50", :box => "bento/ubuntu-18.04", :os => "linux",
-#   :forwarded_port => [
-#     {:guest => 22, :host => 2210, :id => "ssh"}
-#   ]
-# }
-```
-
-  2. uncomment the elk part in the inventory (ad/sevenkingdoms.local/inventory) file
-```
-[elk:vars]
-ansible_connection=ssh
-ansible_ssh_user=vagrant
-ansible_ssh_private_key_file=./.vagrant/machines/elk/virtualbox/private_key
-ansible_ssh_port=22
-host_key_checking = false
-
-[elk]
-192.168.56.50
-```
-
-  3. install with docker
-```bash
-sudo docker run -ti --rm --network host -e ANSIBLE_CONFIG=/goad/ansible -h goadansible -v $(pwd):/goad -w /goad/ansible goadansible ansible-playbook -i ../ad/GOAD/data/inventory -i ../ad/GOAD/providers/virtualbox/inventory elk.yml
-```
-
-  3. or install by hand : 
-
+- prerequistes: 
 - you need `sshpass` for the elk installation
 ```bash
 sudo apt install sshpass
@@ -164,10 +139,32 @@ sudo apt install sshpass
 ```bash
 ansible-galaxy collection install chocolatey.chocolatey 
 ```
-- play the elk.yml playbook to install and run elk:
+
+- To install and start the elk play the following commands :
 ```bash
-ansible-playbook elk.yml
+./goad.sh -t install -l GOAD -p virtualbox -m local -r elk.yml -e elk
+#or
+./goad.sh -t install -l GOAD -p vmware -m local -r elk.yml -e elk
 ```
+
+ * -e : to add the elk in vagrantfile for the vagrant up
+ * -r : to run only the elk.yml ansible script
+
+If you want to only launch the elk.yml file without providing (vm creation), because your elk vm is already up do :
+```bash
+./goad.sh -t install -l GOAD -p virtualbox -m local -a -r elk.yml -e elk
+#or
+./goad.sh -t install -l GOAD -p vmware -m local -a -r elk.yml -e elk
+```
+
+If you want to do that by hand:
+  1. run: `GOAD_VAGRANT_OPTIONS=elk vagrant up`
+
+  2. launch the elk provisionning with the command :
+  ```
+  cd ansible
+  ansible-playbook -i ../ad/GOAD/data/inventory -i ../ad/GOAD/providers/<your_provider>/inventory elk.yml
+  ```
 
 ### V2 breaking changes
 - If you previously install the v1 do not try to update as a lot of things have changed. Just drop your old lab and build the new one (you will not regret it)
