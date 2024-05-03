@@ -1,10 +1,10 @@
 variable "location" {
   type    = string
-  default = "westeurope"
+  default = "francecentral"
 }
 
 resource "azurerm_resource_group" "resource_group" {
-  name     = "GOAD"
+  name     = "ES_GOAD"
   location = var.location
 }
 
