@@ -38,6 +38,10 @@ else
     echo -e "${RED}[-] An error occurred during the installation of curl.${NC}"
 fi
 
+
+# Install net-tools
+sudo apt install net-tools -y
+
 # Install packages to allow apt to use a repository over HTTPS
 sudo apt-get install -y \
     apt-transport-https \
