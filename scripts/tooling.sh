@@ -388,3 +388,13 @@ if command -v lsassy &> /dev/null; then
 else
     echo -e "${RED}[-] An error occurred during the installation of lsassy.${NC}"
 fi
+
+# Install DonPapi
+sudo pipx install donpapi
+
+# Check if donpapi was installed successfully
+if command -v DonPAPI &> /dev/null; then
+    echo -e "${GREEN}[+] DonPapi was installed on the server.${NC}"
+else
+    echo -e "${RED}[-] An error occurred during the installation of DonPapi.${NC}"
+fi
