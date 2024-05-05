@@ -208,6 +208,9 @@ else
     echo "Impacket is already installed."
 fi
 
+# Fix ntlmrelayx.py jinja error
+sudo pip3 install Flask Jinja2 --upgrade
+
 # Ensure Snap is installed
 if ! command_exists snap; then
     echo -e "${YELLOW}[!] Snap is not installed. Installing Snap...${NC}"
@@ -366,3 +369,13 @@ for entry in "${entries_to_add[@]}"; do
 done
 
 echo -e "${GREEN}[+] Update to /etc/hosts complete.${NC}"
+
+# Install proxychains
+sudo apt install proxychians -y
+
+# Check if proxychains was installed successfully
+if command -v proxychains &> /dev/null; then
+    echo -e "${GREEN}[+] proxychains was installed on the server.${NC}"
+else
+    echo -e "${RED}[-] An error occurred during the installation of proxychains.${NC}"
+fi
