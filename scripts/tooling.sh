@@ -379,3 +379,12 @@ if command -v proxychains &> /dev/null; then
 else
     echo -e "${RED}[-] An error occurred during the installation of proxychains.${NC}"
 fi
+# Install lsassy
+sudo python3 -m pip install lsassy
+
+# Check if lsassy was installed successfully
+if command -v lsassy &> /dev/null; then
+    echo -e "${GREEN}[+] lsassy was installed on the server.${NC}"
+else
+    echo -e "${RED}[-] An error occurred during the installation of lsassy.${NC}"
+fi
