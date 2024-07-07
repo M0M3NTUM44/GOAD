@@ -398,3 +398,19 @@ if command -v DonPAPI &> /dev/null; then
 else
     echo -e "${RED}[-] An error occurred during the installation of DonPapi.${NC}"
 fi
+
+# Installing Coercer using pip3
+cd /opt && git clone https://github.com/p0dalirius/Coercer.git
+sudo python3 -m pip install coercer
+
+# Adding /opt/Coercer to PATH
+config_file="${HOME}/.bashrc"
+coercer_dir="/opt/Coercer"
+
+if ! grep -q "$coercer_dir" "$config_file"; then
+    echo "export PATH=\"\$PATH:$coercer_dir\"" >> "$config_file"
+    echo -e "${GREEN}[+] Coercer directory added to PATH in $config_file${NC}"
+else
+    echo -e "${GREEN}[+] Coercer directory already in PATH${NC}"
+fi
+
