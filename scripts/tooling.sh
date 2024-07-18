@@ -414,3 +414,17 @@ else
     echo -e "${GREEN}[+] Coercer directory already in PATH${NC}"
 fi
 
+# Installing impacket module "myimpacket" 
+cd /opt
+git clone https://github.com/SecureAuthCorp/impacket myimpacket
+cd myimpacket
+pip3 install virtualenv
+python3 -m virtualenv myimpacket
+source myimpacket/bin/activate
+python3 -m pip install .
+
+# Pulling spacific PR
+git fetch origin pull/1224/head:1224
+git fetch origin pull/1202/head:1202
+cd /usr/local/bin && wget https://gist.githubusercontent.com/snovvcrash/3bf1a771ea6b376d374facffa9e43383/raw/d4191e295c96bc1cfb0a54b18cfbb8b21d25b483/renameMachine.py && chmod +x && cd /home/goad
+
