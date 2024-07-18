@@ -440,11 +440,13 @@ else
     echo -e "${GREEN}[+] krbrelayx directory is already in PATH${NC}"
 fi
 
+# Change shabeng to python3 if needed
 cd /opt/krbrelayx
-sed -i '1s/$/3/' addspn.py
-sed -i '1s/$/3/' dnstool.py
-sed -i '1s/$/3/' krbrelayx.py
-sed -i '1s/$/3/' printerbug.py
+sed -i '1s/env python$/env python3/' addspn.py
+sed -i '1s/env python$/env python3/' dnstool.py
+sed -i '1s/env python$/env python3/' krbrelayx.py
+sed -i '1s/env python$/env python3/' printerbug.py
+cd /home/goad
 
 # Checking if installed
 if command -v addspn.py &> /dev/null; then
