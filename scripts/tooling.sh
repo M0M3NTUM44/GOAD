@@ -428,3 +428,21 @@ git fetch origin pull/1224/head:1224
 git fetch origin pull/1202/head:1202
 cd /usr/local/bin && wget https://gist.githubusercontent.com/snovvcrash/3bf1a771ea6b376d374facffa9e43383/raw/d4191e295c96bc1cfb0a54b18cfbb8b21d25b483/renameMachine.py && chmod +x && cd /home/goad
 
+#Adding krbrelayx
+cd /opt && git clone https://github.com/dirkjanm/krbrelayx.git
+chmod u+x *
+
+config_file="${HOME}/.bashrc"
+if ! grep -q "/opt/krbrelayx" "$config_file"; then
+    echo "export PATH=\"\$PATH:/opt/krbrelayx\"" >> "$config_file"
+    echo -e "${GREEN}[+] krbrelayx directory added to PATH in $config_file${NC}"
+else
+    echo -e "${GREEN}[+] krbrelayx directory is already in PATH${NC}"
+fi
+
+# Checking if installed
+if command -v krbrelayx &> /dev/null; then
+    echo -e "${GREEN}[+] krbrelayx was installed on the server.${NC}"
+else
+    echo -e "${RED}[-] An error occurred during the installation of krbrelayx.${NC}"
+fi
