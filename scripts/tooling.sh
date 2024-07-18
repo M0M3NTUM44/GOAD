@@ -441,7 +441,7 @@ else
 fi
 
 # Checking if installed
-if command -v krbrelayx &> /dev/null; then
+if command -v addspn.py &> /dev/null; then
     echo -e "${GREEN}[+] krbrelayx was installed on the server.${NC}"
 else
     echo -e "${RED}[-] An error occurred during the installation of krbrelayx.${NC}"
