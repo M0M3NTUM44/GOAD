@@ -440,6 +440,12 @@ else
     echo -e "${GREEN}[+] krbrelayx directory is already in PATH${NC}"
 fi
 
+cd /opt/krbrelayx
+sed -i '1s/$/3/' addspn.py
+sed -i '1s/$/3/' dnstool.py
+sed -i '1s/$/3/' krbrelayx.py
+sed -i '1s/$/3/' printerbug.py
+
 # Checking if installed
 if command -v addspn.py &> /dev/null; then
     echo -e "${GREEN}[+] krbrelayx was installed on the server.${NC}"
