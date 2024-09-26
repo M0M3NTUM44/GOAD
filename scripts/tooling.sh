@@ -454,3 +454,28 @@ if command -v addspn.py &> /dev/null; then
 else
     echo -e "${RED}[-] An error occurred during the installation of krbrelayx.${NC}"
 fi
+
+# Add describeTicket.py to bin
+cd /usr/local/bin
+wget https://github.com/fortra/impacket/raw/refs/heads/master/examples/describeTicket.py
+chmod +x describeTicket.py
+
+# Checking if installed
+if command -v describeTicket.py &> /dev/null; then
+    echo -e "${GREEN}[+] describeTicket was installed on the server.${NC}"
+ else
+    echo -e "${RED}[-] An error occurred during the installation of describeTicket.${NC}"
+fi
+
+# Replace getST.py in bin folder
+rm /usr/local/bin/getST.py
+cd /usr/local/bin
+wget https://github.com/fortra/impacket/raw/refs/heads/master/examples/getST.py
+chmod +x getST.py
+
+# Checking if replaced
+if command -v getST.py &> /dev/null; then
+    echo -e "${GREEN}[+] getST.py  was replaced in /usr/local/bin folder.${NC}"
+else
+    echo -e "${RED}[-] An error occurred during the installation of describeTicket.${NC}"
+fi
