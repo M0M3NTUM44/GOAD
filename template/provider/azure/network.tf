@@ -9,7 +9,7 @@ resource "azurerm_subnet" "subnet" {
   name                 = "{{lab_name}}-vm-subnet"
   resource_group_name  = azurerm_resource_group.resource_group.name
   virtual_network_name = azurerm_virtual_network.virtual_network.name
-  address_prefixes     = ["{{ip_range}}.0/24"]
+  address_prefixes     = ["{{ip_range}}.0/25"]
 }
 
 resource "azurerm_network_interface" "goad-vm-nic" {
@@ -40,4 +40,19 @@ resource "azurerm_network_interface" "goad-linux-vm-nic" {
     private_ip_address_allocation = "Static"
     private_ip_address            = each.value.private_ip_address
   }
+}
+
+resource "azurerm_subnet" "bastion_subnet" {
+  name                 = var.bastion_subnet_name
+  resource_group_name  = azurerm_resource_group.resource_group.name
+  virtual_network_name = azurerm_virtual_network.virtual_network.name
+  address_prefixes     = [var.bastion_subnet_prefix]
+}
+
+resource "azurerm_public_ip" "bastion_public_ip" {
+  name                = "${var.bastion_host_name}-pip"
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }

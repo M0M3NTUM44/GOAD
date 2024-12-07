@@ -24,3 +24,18 @@ variable "jumpbox_username" {
   type    = string
   default = "goad"
 }
+
+variable "bastion_host_name" {
+  description = "Name of the Azure Bastion Host"
+  default     = "goad-bastion"
+}
+
+variable "bastion_subnet_name" {
+  description = "Name of the subnet for the Bastion Host"
+  default     = "AzureBastionSubnet"
+}
+
+variable "bastion_subnet_prefix" {
+  description = "Address prefix for the Bastion subnet"
+  default     = "192.168.56.224/28"  # Make sure this does not overlap with other subnets in the VNet
+}
