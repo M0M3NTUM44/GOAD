@@ -479,3 +479,18 @@ if command -v getST.py &> /dev/null; then
 else
     echo -e "${RED}[-] An error occurred during the installation of describeTicket.${NC}"
 fi
+
+# Install MinGW-w64 (GCC cross-compiler for Windows)
+echo -e "${YELLOW}[!] Installing MinGW-w64 (gcc-mingw-w64-x86-64)...${NC}"
+sudo apt-get update
+if sudo apt-get install -y gcc-mingw-w64-x86-64; then
+  # the binary provided by the package is usually x86_64-w64-mingw32-gcc
+  if command -v x86_64-w64-mingw32-gcc &> /dev/null; then
+    echo -e "${GREEN}[+] gcc-mingw-w64-x86-64 (x86_64-w64-mingw32-gcc) was installed on the server.${NC}"
+  else
+    echo -e "${YELLOW}[!] gcc-mingw-w64-x86-64 installed but expected binary not found in PATH.${NC}"
+  fi
+else
+  echo -e "${RED}[-] An error occurred during the installation of gcc-mingw-w64-x86-64.${NC}"
+fi
+
