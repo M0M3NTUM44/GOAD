@@ -273,22 +273,22 @@ else
 fi
 
 # Install bloodhound.py
-pip3 install bloodhound
+pipx install bloodhound-ce
 
 # Check if bloodhound.py was installed successfully
-if command_exists bloodhound; then
+if command_exists bloodhound-ce-python; then
     echo -e "${GREEN}[+] bloodhound.py was successfully installed.${NC}"
 fi
 
 # Define bloodhound.py as alias for bloodhound-python
-alias_command="alias bloodhound.py='bloodhound-python'"
+alias_command="alias bloodhound.py='bloodhound-ce-python'"
 config_file="${HOME}/.bashrc"
-if grep -q "alias bloodhound.py='bloodhound-python'" "$config_file"; then
-    echo -e "${GREEN}[+] Alias for bloodhound-python already exists in $config_file${NC}"
+if grep -q "alias bloodhound.py='bloodhound-ce-python'" "$config_file"; then
+    echo -e "${GREEN}[+] Alias for bloodhound-ce-python already exists in $config_file${NC}"
 else
     # Append the alias to the configuration file
     echo "$alias_command" >> "$config_file"
-    echo -e "${GREEN}[+] Added alias for bloodhound-python to $config_file${NC}"
+    echo -e "${GREEN}[+] Added alias for bloodhound-ce-python to $config_file${NC}"
     echo -e "${YELLOW}[!] Please restart your terminal or run 'source $config_file' to use the alias.${NC}"
 fi
 
